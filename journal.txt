@@ -2,3 +2,7 @@ Processing:
 age: NA - 3 entries. 
 PTWORKS: 570 NA, 820 -4
 PTHAND  PTMARRY PTEDUCAT  PTNOTRT   PTHOME  PTPLANG PTETHCAT PTRACCAT: NA 0-13
+
+Family history of AZ (merged adni3 and adni1,go):
+excluded 2 - "I don't know", -4, -1, NA
+excluded sibling related vars because of the inconsistensies in a csv file (multiple entries per one ID with different information)
