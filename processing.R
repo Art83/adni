@@ -232,15 +232,22 @@ apply(apply(adas_all,2,is.na),2, sum)
 lab.data <- read.csv("D:/AZ/adni/raw/lab_data/LABDATA.csv", stringsAsFactors = F)
 
 
+cols <- c("BAT126",  "HMT10",   "HMT100",  "HMT102",  "HMT11",   "HMT12",   "HMT13",   "HMT15",   "HMT16",   "HMT17",   "HMT18",  
+          "HMT19",  "HMT2",    "HMT3",    "HMT4",    "HMT40",   "HMT7",    "HMT8",    "HMT9",    "RCT1",    "RCT11",   "RCT12",  
+          "RCT13",   "RCT14",   "RCT1407", "RCT1408", "RCT183",  "RCT19",   "RCT20",   "RCT29",   "RCT3",  "RCT392",  "RCT4", 
+          "RCT5",    "RCT6",    "RCT8",    "RCT9",    "BAT324" )
+
 lab.data <- lab.data %>%
   mutate(EXAMDATE = as.Date(EXAMDATE)) %>%
+  mutate(across(all_of(cols), as.numeric)) %>%
   group_by(RID) %>%
   arrange(EXAMDATE, .by_group = T) %>%
   slice(1) %>%
-  select(RID, BAT126, HMT10, HMT100, HMT102, HMT11, HMT12, HMT13, HMT15, HMT16, HMT17, HMT18, HMT19, HMT2, HMT3, HMT4, HMT40, HMT7, HMT8, HMT9, RCT1, RCT11, RCT12, RCT13, RCT14, RCT1407, RCT1408, RCT183, RCT19, RCT20, RCT29, RCT3, RCT392, RCT4, RCT5, RCT6, RCT8, RCT9, BAT324)
+  select(RID, cols) %>%
+  mutate(across(all_of(cols), ~replace(., .<0, NA)) )
 
 
-
+apply(apply(lab.data,2,is.na),2, sum)
 
 
 # CSF
@@ -262,12 +269,36 @@ apply(apply(csf.1,2,is.na),2, sum)
 pept <- read.csv("D:/AZ/adni/raw/CSF/PEPTIDES.csv", stringsAsFactors = F)
 
 
-csf.1 <- csf.1 %>%
-  filter(PHASE != "ADNI4") %>%
+pept <- pept %>%
+  group_by(RID) %>%
+  filter(VISCODE2 == 'bl') %>%
+  filter(!grepl("APOE", PROTEIN)) %>%
+  select(RID, PROTEIN, TOTAL_AREA_RATIO, VOL_ML) %>%
+  ungroup() %>%
+  #mutate(PROTEIN = unlist(sapply(strsplit(unlist(sapply(strsplit(PROTEIN, "[|]"), "[", 3)), "_"), "[", 1)) )
+  mutate(PROTEIN = unlist(sapply(strsplit(PROTEIN, "[|]"), "[", 3)) )
+
+
+apply(apply(ex,2,is.na),2, sum)
+
+
+# Peptides
+tau <- read.csv("D:/AZ/adni/raw/CSF/TAU.csv", stringsAsFactors = F)
+
+tau <- tau %>%
+  group_by(RID) %>%
+  filter(VISCODE2 == 'bl') %>%
+  select(RID, ABETA40, ABETA42, TAU, PTAU)
+
+
+apply(apply(tau,2,is.na),2, sum)
+
+
+# Diagnosis
+diag <- read.csv("D:/AZ/adni/raw/outcome.csv", stringsAsFactors = F)
+
+
+diag <- diag %>%
   group_by(RID) %>%
   filter(VISCODE == 'bl') %>%
-  select(RID, CTWHITE:GLUCOSE) %>%
-  mutate(across(CTWHITE:GLUCOSE, ~ replace(., . < 0, NA)))
-
-
-apply(apply(csf.1,2,is.na),2, sum)
+  select(RID, DIAGNOSIS)
