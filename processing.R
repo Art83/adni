@@ -5,7 +5,7 @@ suppressPackageStartupMessages(library(dplyr))
 demo <- read.csv("D:/AZ/adni/raw/demo.csv", stringsAsFactors = F)
 
 
-ss <- demo %>%
+demo <- demo %>%
   filter(VISCODE == "sc") %>%
   select(RID, VISDATE, PTDOB, PTHAND, PTMARRY, PTEDUCAT, PTNOTRT, PTHOME, PTPLANG, PTETHCAT, PTRACCAT) %>%
   mutate(VISDATE_new = zoo::as.yearmon(as.Date(VISDATE)) ) %>%
@@ -105,7 +105,8 @@ physical <- read.csv("D:/AZ/adni/raw/medical_history/PHYSICAL.csv", stringsAsFac
 physical <- physical %>%
   select(RID, VISCODE, PXGENAPP:PXABNORM) %>%
   group_by(RID) %>%
-  filter(VISCODE == "sc")
+  filter(VISCODE == "sc") %>%
+  select(-c(VISCODE, PXBACK,PXOTHER, PXABNORM) )
 
 apply(apply(physical,2,is.na),2, sum)
 apply(apply(physical,2,function(x) x < 0),2, sum)
@@ -116,9 +117,10 @@ apply(apply(physical,2,function(x) x < 0),2, sum)
 neuroexam <- read.csv("D:/AZ/adni/raw/medical_history/NEUROEXM.csv", stringsAsFactors = F)
 
 neuroexam <- neuroexam %>%
-  select(RID, VISCODE, NXVISUAL:NXABNORM) %>%
+  select(RID, VISCODE, NXVISUAL:NXOTHER) %>%
   group_by(RID) %>%
-  filter(VISCODE == "sc")
+  filter(VISCODE == "sc") %>%
+  select(-c(NXOTHER,VISCODE, NXCONSCI) )
 
 apply(apply(neuroexam,2,is.na),2, sum)
 apply(apply(neuroexam,2,function(x) x < 0),2, sum)
@@ -130,7 +132,8 @@ blscheck <- read.csv("D:/AZ/adni/raw/medical_history/BLSCHECK.csv", stringsAsFac
 blscheck <- blscheck %>%
   select(RID, VISCODE, BCNAUSEA:BCOTHER) %>%
   group_by(RID) %>%
-  filter(VISCODE == "bl")
+  filter(VISCODE == "bl") %>%
+  select(-VISCODE)
 
 apply(apply(blscheck,2,is.na),2, sum)
 apply(apply(blscheck,2,function(x) x < 0),2, sum)
@@ -141,7 +144,8 @@ medhist <- read.csv("D:/AZ/adni/raw/medical_history/MEDHIST.csv", stringsAsFacto
 medhist <- medhist %>%
   select(RID, VISCODE, MHSOURCE:MH19OTHR) %>%
   group_by(RID) %>%
-  filter(VISCODE == "sc")
+  filter(VISCODE == "sc") %>%
+  select(-c(VISCODE, MH14AALCH, MH14BALCH, MH14CALCH, MH15ADRUG, MH15BDRUG, MH16ASMOK, MH16BSMOK, MH16CSMOK))
 
 apply(apply(medhist,2,is.na),2, sum)
 apply(apply(medhist,2,function(x) x < 0),2, sum)
@@ -153,7 +157,7 @@ neurobat <- read.csv("D:/AZ/adni/raw/psych_eval/NEUROBAT.csv", stringsAsFactors 
 neurobat <- neurobat %>%
   group_by(RID) %>%
   filter(VISCODE == 'sc') %>%
-  select(RID, CLOCKSCOR, COPYSCOR, LIMMTOTAL, AVTOTB, AVERRB, DSPANFOR:DIGITSCOR, LDELTOTAL)
+  select(RID, LIMMTOTAL, LDELTOTAL)
 
 apply(apply(neurobat,2,is.na),2, sum)
 
@@ -165,7 +169,7 @@ npiq <- npiq %>%
   group_by(RID) %>%
   filter(VISCODE == 'bl') %>%
   select(!ends_with("SEV")) %>%
-  select(RID, NPIA:SPID)
+  select(RID, NPIA:NPISCORE)
 
 apply(apply(npiq,2,is.na),2, sum)
 
@@ -188,8 +192,8 @@ gdscale <- read.csv("D:/AZ/adni/raw/psych_eval/GDSCALE.csv", stringsAsFactors = 
 gdscale <- gdscale %>%
   group_by(RID) %>%
   filter(VISCODE == 'sc') %>%
-  select(RID, GDUNABL:GDTOTAL) %>%
-  mutate(across(GDUNABL:GDTOTAL, ~ replace(., . == -4 | . == -1, NA)))
+  select(RID, GDSATIS:GDTOTAL) %>%
+  mutate(across(GDSATIS:GDTOTAL, ~ replace(., . == -4 | . == -1, NA)))
   
 
 apply(apply(gdscale,2,is.na),2, sum)
@@ -235,7 +239,7 @@ lab.data <- read.csv("D:/AZ/adni/raw/lab_data/LABDATA.csv", stringsAsFactors = F
 cols <- c("BAT126",  "HMT10",   "HMT100",  "HMT102",  "HMT11",   "HMT12",   "HMT13",   "HMT15",   "HMT16",   "HMT17",   "HMT18",  
           "HMT19",  "HMT2",    "HMT3",    "HMT4",    "HMT40",   "HMT7",    "HMT8",    "HMT9",    "RCT1",    "RCT11",   "RCT12",  
           "RCT13",   "RCT14",   "RCT1407", "RCT1408", "RCT183",  "RCT19",   "RCT20",   "RCT29",   "RCT3",  "RCT392",  "RCT4", 
-          "RCT5",    "RCT6",    "RCT8",    "RCT9",    "BAT324" )
+          "RCT5",    "RCT6",    "RCT8",    "RCT9")
 
 lab.data <- lab.data %>%
   mutate(EXAMDATE = as.Date(EXAMDATE)) %>%
@@ -266,29 +270,12 @@ apply(apply(csf.1,2,is.na),2, sum)
 
 
 # Peptides
-pept <- read.csv("D:/AZ/adni/raw/CSF/PEPTIDES.csv", stringsAsFactors = F)
-
-
-pept <- pept %>%
-  group_by(RID) %>%
-  filter(VISCODE2 == 'bl') %>%
-  filter(!grepl("APOE", PROTEIN)) %>%
-  select(RID, PROTEIN, TOTAL_AREA_RATIO, VOL_ML) %>%
-  ungroup() %>%
-  #mutate(PROTEIN = unlist(sapply(strsplit(unlist(sapply(strsplit(PROTEIN, "[|]"), "[", 3)), "_"), "[", 1)) )
-  mutate(PROTEIN = unlist(sapply(strsplit(PROTEIN, "[|]"), "[", 3)) )
-
-
-apply(apply(ex,2,is.na),2, sum)
-
-
-# Peptides
 tau <- read.csv("D:/AZ/adni/raw/CSF/TAU.csv", stringsAsFactors = F)
 
 tau <- tau %>%
   group_by(RID) %>%
   filter(VISCODE2 == 'bl') %>%
-  select(RID, ABETA40, ABETA42, TAU, PTAU)
+  select(RID,ABETA42, TAU, PTAU)
 
 
 apply(apply(tau,2,is.na),2, sum)
@@ -302,3 +289,104 @@ diag <- diag %>%
   group_by(RID) %>%
   filter(VISCODE == 'bl') %>%
   select(RID, DIAGNOSIS)
+
+
+
+apoe <- read.csv("D:/AZ/adni/raw/APOERES.csv", stringsAsFactors = F)
+
+
+apoeres <- apoe %>% 
+  mutate(apoe = if_else(APGEN1 == 4 & APGEN2 == 4, 4,
+                        if_else(APGEN1 == 4 | APGEN2 == 4, 3,
+                                if_else(APGEN1 == 3 | APGEN2 == 3, 2, 1))) ) %>% 
+  select(RID, apoe)
+
+
+main_df <- Reduce(function(x,y) merge(x,y,by="RID"), list(demo,
+                                                          family,
+                                                          vitals,
+                                                          physical,
+                                                          neuroexam,
+                                                          neurobat,
+                                                          #blscheck,
+                                                          medhist,
+                                                          gdscale,
+                                                          modnach,
+                                                          #npiq,
+                                                          #faq,
+                                                          lab.data,
+                                                          #csf.1,
+                                                          #tau,
+                                                          apoeres,
+                                                          diag))
+
+
+apply(apply(main_df, 2, is.na),2,sum)
+
+
+main_df <- main_df %>%
+  filter(!is.na(weight),
+         !is.na(temperature),
+         !is.na(PTNOTRT)) %>%
+  group_by(DIAGNOSIS) %>%
+  mutate(across(BAT126:RCT9, ~ifelse(is.na(.), median(., na.rm=T), .))) %>%
+  select(-RID) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  mutate(DIAGNOSIS = as.factor(case_when(DIAGNOSIS == 1 ~ "Control",
+                               DIAGNOSIS == 2 ~ "MCI",
+                               DIAGNOSIS == 3 ~ "AZ"))) %>%
+  na.omit() %>%
+  ungroup() %>%
+  as.data.frame()
+
+saveRDS(main_df, "D:/AZ/adni/objects/df_imputed_not_complete_1073")
+
+
+pool <- unique(c(demo$RID,
+                 family$RID,
+                 vitals$RID,
+                 physical$RID,
+                 neuroexam$RID,
+                 neurobat$RID,
+                 blscheck$RID,
+                 medhist$RID,
+                 gdscale$RID,
+                 modnach$RID,
+                 npiq$RID,
+                 faq$RID,
+                 lab.data$RID,
+                 csf.1$RID,
+                 tau$RID,
+                 apoeres$RID,
+                 diag$RID))
+
+
+df.res <- data.frame(RID = pool,
+                     demo = pool %in% demo$RID,
+                     family = pool %in% family$RID,
+                     vitals = pool %in% vitals$RID,
+                     physical = pool %in% physical$RID,
+                     neuroexam = pool %in% neuroexam$RID,
+                     neurobat = pool %in% neurobat$RID,
+                     blscheck = pool %in% blscheck$RID,
+                     medhist = pool %in% medhist$RID,
+                     gdscale = pool %in% gdscale$RID,
+                     modnach = pool %in% modnach$RID,
+                     npiq = pool %in% npiq$RID,
+                     faq = pool %in% faq$RID,
+                     lab.data = pool %in% lab.data$RID,
+                     csf.1 = pool %in% csf.1$RID,
+                     tau = pool %in% tau$RID,
+                     apoe = pool %in% apoeres$RID,
+                     diag = pool %in% diag$RID)
+
+
+df.res.l <- do.call(cbind, lapply(df.res[,-1], function(x) ifelse(x, 1, 0)))
+
+
+UpSetR::upset(as.data.frame(df.res.l), nsets = 17)
+
+
+
+apply(df.res, 2, sum)
+

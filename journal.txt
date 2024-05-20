@@ -15,5 +15,5 @@ VITALS:
 	temperature -> C
 PHYSICAL, NEUROEXAM, BLSCHECK, MEDHIST: no modifications
 
-
+Homogeneous vars: PXABNORM NXABNORM NXCONSCI are excluded.
 
